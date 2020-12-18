@@ -77,7 +77,7 @@ def collide(obj1, obj2):
 	return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
 
 def getRandomX():
-	return random.randrange(60, 363)
+	return random.randrange(0, 500)
 
 def getRandomY():
 	return random.randrange(-20, 0)
@@ -163,11 +163,12 @@ def eval_genomes(genomes, config):
 
 		for vehicle in traffic:	
 			# send car location, top pipe location and bottom pipe location and determine from network whether to jump or not
-			output = nets[cars.index(car)].activate((car.x, abs(car.x - vehicle.x), abs(car.y - vehicle.y)))
-			if output[0] > 0.5:  # we use a tanh activation function so result will be between -1 and 1. if over 0.5 jump
-				car.move(-3)
-			else:
-				car.move(3)			
+			for car in cars:
+				output = nets[cars.index(car)].activate((car.x, abs(car.x - vehicle.x), abs(car.y - vehicle.y)))
+				if output[0] > 0.5:  # we use a tanh activation function so result will be between -1 and 1. if over 0.5 jump
+					car.move(-2)
+				else:
+					car.move(2)			
 
 		for vehicle in traffic:
 			if vehicle.y >500:
@@ -181,8 +182,6 @@ def eval_genomes(genomes, config):
 					genome.fitness += 5
 			for car in cars:
 				col = collide(vehicle,car)
-				if car.x <50:
-					cars.pop(cars.index(car))
 				if col == True:
 					ge[cars.index(car)].fitness -= 1
 					nets.pop(cars.index(car))
@@ -192,6 +191,8 @@ def eval_genomes(genomes, config):
 		for car in cars:
 			if car.x <95 or car.x >450:
 				ge[cars.index(car)].fitness -= 1
+
+			if car.x < 10 or car.x >460:
 				nets.pop(cars.index(car))
 				ge.pop(cars.index(car))
 				cars.pop(cars.index(car))
@@ -199,12 +200,13 @@ def eval_genomes(genomes, config):
 
 
 		# break if score gets large enough
-		if score > 500:
-			pickle.dump(nets[0],open("best.pickle", "wb"))
-			break
-		if score > top:
-			top = score
-			g_top = gen
+		if score > 500 or score > top:
+			with open("best.pkl","wb") as f:
+				pickle.dump(nets[0],open("best.pkl", "wb"))
+				f.close()
+		# if score > 500 or score > top:
+				top = score
+				g_top = gen
 
 		background(WIN,stripes,speed,cars,traffic,distance,score,gen,top,g_top)
 
@@ -229,7 +231,11 @@ def run(config_file):
 	#p.add_reporter(neat.Checkpointer(5))
 
 	# Run for up to 50 generations.
-	winner = p.run(eval_genomes, 200)
+	winner = p.run(eval_genomes, 30)
+
+	with open("winner.pkl","wb") as f:
+		pickle.dump(winner,f)
+		f.close()
 
 	# show final stats
 	print('\nBest genome:\n{!s}'.format(winner))
