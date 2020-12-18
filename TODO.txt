@@ -1,0 +1,7 @@
+17-12-2020 15:00 
+create a world
+create a car
+add control
+add conculsion
+add opponents
+add AI
