@@ -49,14 +49,6 @@ class Car:
 		self.x += vel
 	def vertical(self,vel):
 		self.y += vel
-	def collision(self,x,y):
-		distance = math.sqrt((math.pow(self.x - x,2))+(math.pow(self.y - y,2)))
-
-		if distance <27:
-			print('------YESS------')
-			return True
-		else:
-			return False
 
 class Stripe:
 	def __init__(self, x,y,img):
@@ -77,7 +69,7 @@ def collide(obj1, obj2):
 	return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
 
 def getRandomX():
-	return random.randrange(0, 500)
+	return random.randrange(50, 450)
 
 def getRandomY():
 	return random.randrange(-20, 0)
@@ -129,7 +121,7 @@ def eval_genomes(genomes, config):
 	# start by creating lists holding the genome itself, the
 	# neural network associated with the genome and the
 	# car object that uses that network to play
-	nets = []
+	nets = [] 
 	cars = []
 	ge = []
 	for genome_id, genome in genomes:
@@ -160,6 +152,7 @@ def eval_genomes(genomes, config):
 
 		for x, car in enumerate(cars):  # give each car a fitness of 0.1 for each frame it stays alive
 			ge[x].fitness += 0.1
+			ge[x].fitness += (10/len(cars))
 
 		for vehicle in traffic:	
 			# send car location, top pipe location and bottom pipe location and determine from network whether to jump or not
@@ -192,7 +185,7 @@ def eval_genomes(genomes, config):
 			if car.x <95 or car.x >450:
 				ge[cars.index(car)].fitness -= 1
 
-			if car.x < 10 or car.x >460:
+			if car.x < 52 or car.x >448:
 				nets.pop(cars.index(car))
 				ge.pop(cars.index(car))
 				cars.pop(cars.index(car))
@@ -231,7 +224,7 @@ def run(config_file):
 	#p.add_reporter(neat.Checkpointer(5))
 
 	# Run for up to 50 generations.
-	winner = p.run(eval_genomes, 30)
+	winner = p.run(eval_genomes, 50)
 
 	with open("winner.pkl","wb") as f:
 		pickle.dump(winner,f)

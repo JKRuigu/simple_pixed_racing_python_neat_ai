@@ -71,17 +71,20 @@ class Stripe:
 	def move(self,vel):
 		self.y+=vel
 
+# collide function
 def collide(obj1, obj2):
 	offset_x = obj2.x - obj1.x
 	offset_y = obj2.y - obj1.y
 	return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
 
+# gets random range in x-axis
 def getRandomX():
 	return random.randrange(60, 363)
 
+# gets random range in y-axis
 def getRandomY():
 	return random.randrange(-20, 0)
-
+# set the background loaing stripes,car,traffice
 def background(win,stripes,speed,car,traffic,distance,score):
 	win.fill((0,0,0))		
 	win.blit(BG, (0,0))	
@@ -100,7 +103,7 @@ def background(win,stripes,speed,car,traffic,distance,score):
 
 	for vehicle in traffic:
 		vehicle.draw(win)		
-
+	#displays information back to the user distance,score 
 	distances = font.render(f"Distance: {distance}", 1, (255,255,255))	
 	scores = font.render(f"Score: {score}", 1, (255,255,255))
 	WIN.blit(distances, (50, 0))
@@ -108,7 +111,7 @@ def background(win,stripes,speed,car,traffic,distance,score):
 
 	pygame.display.update()
 
-
+# main function saved genomes for neat network
 def eval_genomes(genomes, config):
 
 	car = Car(getRandomX(),400,BLUE_CAR)
@@ -119,10 +122,14 @@ def eval_genomes(genomes, config):
 	speed = 3
 	number_of_traffic = 2
 	clock = pygame.time.Clock()
+	#loaing the network
+	nets = []
+
 	for genome_id, genome in genomes:
-		print(genome)
+		net = neat.nn.FeedForwardNetwork.create(genome, config)
+		nets.append(net)
 
-
+	#setting the traffic	
 	traffic = [Car(getRandomX(),getRandomY(),GREEN_CAR),Car(getRandomX(),getRandomY(),GREEN_CAR)]
 	stripes = [Stripe(200,50,STRIPE),Stripe(200,200,STRIPE),Stripe(200,350,STRIPE)]
 
@@ -142,7 +149,14 @@ def eval_genomes(genomes, config):
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				run = False
-
+		for vehicle in traffic:
+			output = nets[0].activate((car.x, abs(car.x - vehicle.x), abs(car.y - vehicle.y)))
+			print(output)
+			if output[0] > 0.5:  # we use a tanh activation function so result will be between -1 and 1. if over 0.5 jump
+				car.move(-2)
+			else:
+				car.move(2)	
+		
 		for vehicle in traffic:
 			if vehicle.y >500:
 				traffic.pop(traffic.index(vehicle))
@@ -154,12 +168,14 @@ def eval_genomes(genomes, config):
 			col = collide(vehicle,car)
 			if col == True:
 				run = False
+		if car.x < 50 or car.x>460:
+			break
 
 		background(WIN,stripes,speed,car,traffic,distance,score)
 
 
 
-def replay_genome(config_path, genome_path="winner.pkl"):
+def replay_genome(config_path, genome_path="winner4.pkl"):
 	# Load requried NEAT config
 	config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
 
